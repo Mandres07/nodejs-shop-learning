@@ -1,4 +1,6 @@
 const path = require('path');
+const fs = require('fs');
+// const https = require('https');
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -8,11 +10,14 @@ const MongoDBStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf'); // Para tokens de seguridad en cada form como antiforgery token
 const flash = require('connect-flash');
 const multer = require('multer');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
-const MONGODB_URI = 'mongodb+srv://Mandres:Mandres.07.mdb@cluster0.qnd1j.mongodb.net/shop';
+const MONGODB_URI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.qnd1j.mongodb.net/${process.env.MONGO_DEFAULT_DB}`;
 
 const app = express();
 const store = new MongoDBStore({
@@ -21,6 +26,10 @@ const store = new MongoDBStore({
 });
 
 const csrfProtection = csrf();
+
+//obtener el certificado SSL
+// const privateKey = fs.readFileSync('server.key');
+// const certificate = fs.readFileSync('server.cert');
 
 // Configuracion de multer que indica en q carpeta se guardar los archivos y con que nombre
 const fileStorage = multer.diskStorage({
@@ -47,6 +56,16 @@ app.set('views', 'views');
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
+
+// Stream que se va a utilizar para guardar todos los logs del server
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
+
+// Este middleware incrusta algunos headers al request para agregarle seguridad al sitio y servidor en general, procurar incrustar los headers antes de enviar responses
+app.use(helmet());
+// Este middleware ayuda a comprimir todos los archivos del sitio para que pesen mucho menos y el server responda mas rapido
+app.use(compression());
+// Middleware que loggea cada accion que se hace en el server y lo escribe en el stream especificado (si no se especifica stream lo escribe en consola)
+app.use(morgan('combined', { stream: accessLogStream }));
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -109,7 +128,10 @@ mongoose
    .connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
    .then(result => {
       console.log('Connected!');
-      app.listen(3000);
+      // con esta fora se crea el server https
+      // https.createServer({ key: privateKey, cert: certificate }, app).listen(process.env.PORT || 3000)
+      // con esta forma se crea el server http
+      app.listen(process.env.PORT || 3000);
    })
    .catch(err => {
       console.log(err);

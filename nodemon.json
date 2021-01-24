@@ -1,0 +1,8 @@
+{
+   "env": {
+      "MONGO_USER": "Mandres",
+      "MONGO_PASSWORD": "Mandres.07.mdb",
+      "MONGO_DEFAULT_DB": "shop",
+      "SEND_GRID_KEY": "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"
+   }
+}
