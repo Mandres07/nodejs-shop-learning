@@ -127,7 +127,7 @@ app.use((error, req, res, next) => {
 mongoose
    .connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
    .then(result => {
-      console.log('Connected!');
+      // console.log('Connected!');
       // con esta fora se crea el server https
       // https.createServer({ key: privateKey, cert: certificate }, app).listen(process.env.PORT || 3000)
       // con esta forma se crea el server http
